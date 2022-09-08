@@ -36,19 +36,20 @@ resource "random_id" "suffix" {
   Make sure group_org_admins has projectCreator.
 *************************************************/
 
-resource "google_organization_iam_member" "tmp_project_creator" {
-  count  = local.is_organization ? 1 : 0
-  org_id = local.parent_id
-  role   = "roles/resourcemanager.projectCreator"
-  member = "group:${var.group_org_admins}"
-}
+# TODO it's not part of the bootstrap ??!!     
+# resource "google_organization_iam_member" "tmp_project_creator" {
+#   count  = local.is_organization ? 1 : 0
+#   org_id = local.parent_id
+#   role   = "roles/resourcemanager.projectCreator"
+#   member = "group:${var.group_org_admins}"
+# }
 
-resource "google_folder_iam_member" "tmp_project_creator" {
-  count  = local.is_organization ? 0 : 1
-  folder = local.parent_id
-  role   = "roles/resourcemanager.projectCreator"
-  member = "group:${var.group_org_admins}"
-}
+# resource "google_folder_iam_member" "tmp_project_creator" {
+#   count  = local.is_organization ? 0 : 1
+#   folder = local.parent_id
+#   role   = "roles/resourcemanager.projectCreator"
+#   member = "group:${var.group_org_admins}"
+# }
 
 /******************************************
   Create IaC Project
@@ -149,48 +150,51 @@ resource "google_storage_bucket" "org_terraform_state" {
   granting billing account and project creation.
  ***********************************************/
 
-resource "google_organization_iam_binding" "billing_creator" {
-  org_id = var.org_id
-  role   = "roles/billing.creator"
-  members = [
-    "group:${var.group_billing_admins}",
-  ]
-}
+# TODO it's not part of the bootstrap ??!!     
+# resource "google_organization_iam_binding" "billing_creator" {
+#   org_id = var.org_id
+#   role   = "roles/billing.creator"
+#   members = [
+#     "group:${var.group_billing_admins}",
+#   ]
+# }
 
 resource "google_organization_iam_binding" "project_creator" {
   count   = local.is_organization ? 1 : 0
   org_id  = local.parent_id
   role    = "roles/resourcemanager.projectCreator"
-  members = local.org_project_creators
+  members = local.org_project_creators # it's fine with var.org_project_creators and var.group_org_admins ampty
 }
 
 resource "google_folder_iam_binding" "project_creator" {
   count   = local.is_organization ? 0 : 1
   folder  = local.parent_id
   role    = "roles/resourcemanager.projectCreator"
-  members = local.org_project_creators
+  members = local.org_project_creators # it's fine with var.org_project_creators and var.group_org_admins ampty
 }
 
 /***********************************************
   Organization permissions for org admins.
  ***********************************************/
 
-resource "google_organization_iam_member" "org_admins_group" {
-  for_each = toset(var.org_admins_org_iam_permissions)
-  org_id   = var.org_id
-  role     = each.value
-  member   = "group:${var.group_org_admins}"
-}
+# TODO it's not part of the bootstrap ??!!     
+# resource "google_organization_iam_member" "org_admins_group" {
+#   for_each = toset(var.org_admins_org_iam_permissions)
+#   org_id   = var.org_id
+#   role     = each.value
+#   member   = "group:${var.group_org_admins}"
+# }
 
 /***********************************************
   Organization permissions for billing admins.
  ***********************************************/
 
-resource "google_organization_iam_member" "org_billing_admin" {
-  org_id = var.org_id
-  role   = "roles/billing.admin"
-  member = "group:${var.group_billing_admins}"
-}
+# TODO it's not part of the bootstrap ??!!   
+# resource "google_organization_iam_member" "org_billing_admin" {
+#   org_id = var.org_id
+#   role   = "roles/billing.admin"
+#   member = "group:${var.group_billing_admins}"
+# }
 
 /***********************************************
   Organization permissions for Terraform.
@@ -222,50 +226,51 @@ resource "google_storage_bucket_iam_member" "org_terraform_state_iam" {
   as org admin.
  ***********************************************/
 
-resource "google_service_account_iam_member" "org_admin_sa_user" {
-  count = local.impersonation_enabled_count
+# maybe we will need it 
+# resource "google_service_account_iam_member" "org_admin_sa_user" {
+#   count = local.impersonation_enabled_count
 
-  service_account_id = google_service_account.org_terraform.name
-  role               = "roles/iam.serviceAccountUser"
-  member             = "group:${var.group_org_admins}"
-}
+#   service_account_id = google_service_account.org_terraform.name
+#   role               = "roles/iam.serviceAccountUser"
+#   member             = "group:${var.group_org_admins}"
+# }
 
-resource "google_service_account_iam_member" "org_admin_sa_impersonate_permissions" {
-  count = local.impersonation_enabled_count
+# resource "google_service_account_iam_member" "org_admin_sa_impersonate_permissions" {
+#   count = local.impersonation_enabled_count
 
-  service_account_id = google_service_account.org_terraform.name
-  role               = "roles/iam.serviceAccountTokenCreator"
-  member             = "group:${var.group_org_admins}"
-}
+#   service_account_id = google_service_account.org_terraform.name
+#   role               = "roles/iam.serviceAccountTokenCreator"
+#   member             = "group:${var.group_org_admins}"
+# }
 
-resource "google_organization_iam_member" "org_admin_serviceusage_consumer" {
-  count = var.sa_enable_impersonation && local.is_organization ? 1 : 0
+# resource "google_organization_iam_member" "org_admin_serviceusage_consumer" {
+#   count = var.sa_enable_impersonation && local.is_organization ? 1 : 0
 
-  org_id = local.parent_id
-  role   = "roles/serviceusage.serviceUsageConsumer"
-  member = "group:${var.group_org_admins}"
-}
+#   org_id = local.parent_id
+#   role   = "roles/serviceusage.serviceUsageConsumer"
+#   member = "group:${var.group_org_admins}"
+# }
 
-resource "google_folder_iam_member" "org_admin_service_account_user" {
-  count = var.sa_enable_impersonation && !local.is_organization ? 1 : 0
+# resource "google_folder_iam_member" "org_admin_service_account_user" {
+#   count = var.sa_enable_impersonation && !local.is_organization ? 1 : 0
 
-  folder = local.parent_id
-  role   = "roles/iam.serviceAccountUser"
-  member = "group:${var.group_org_admins}"
-}
+#   folder = local.parent_id
+#   role   = "roles/iam.serviceAccountUser"
+#   member = "group:${var.group_org_admins}"
+# }
 
-resource "google_folder_iam_member" "org_admin_serviceusage_consumer" {
-  count = var.sa_enable_impersonation && !local.is_organization ? 1 : 0
+# resource "google_folder_iam_member" "org_admin_serviceusage_consumer" {
+#   count = var.sa_enable_impersonation && !local.is_organization ? 1 : 0
 
-  folder = local.parent_id
-  role   = "roles/serviceusage.serviceUsageConsumer"
-  member = "group:${var.group_org_admins}"
-}
+#   folder = local.parent_id
+#   role   = "roles/serviceusage.serviceUsageConsumer"
+#   member = "group:${var.group_org_admins}"
+# }
 
-resource "google_storage_bucket_iam_member" "orgadmins_state_iam" {
-  count = local.impersonation_enabled_count
+# resource "google_storage_bucket_iam_member" "orgadmins_state_iam" {
+#   count = local.impersonation_enabled_count
 
-  bucket = google_storage_bucket.org_terraform_state.name
-  role   = "roles/storage.admin"
-  member = "group:${var.group_org_admins}"
-}
+#   bucket = google_storage_bucket.org_terraform_state.name
+#   role   = "roles/storage.admin"
+#   member = "group:${var.group_org_admins}"
+# }
