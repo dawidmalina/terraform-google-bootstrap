@@ -20,7 +20,7 @@ locals {
   supplied_bucket_name        = var.random_suffix == true ? format("%s-%s", var.state_bucket_name, random_id.suffix.hex) : var.state_bucket_name
   state_bucket_name           = var.state_bucket_name != "" ? local.supplied_bucket_name : local.generated_bucket_name
   impersonation_apis          = distinct(concat(var.activate_apis, ["serviceusage.googleapis.com", "iamcredentials.googleapis.com"]))
-  impersonation_enabled_count = var.sa_enable_impersonation == true ? 1 : 0
+#   impersonation_enabled_count = var.sa_enable_impersonation == true ? 1 : 0
   activate_apis               = var.sa_enable_impersonation == true ? local.impersonation_apis : var.activate_apis
   org_project_creators        = ["serviceAccount:${google_service_account.org_terraform.email}"]
   is_organization             = var.parent_folder == "" ? true : false
