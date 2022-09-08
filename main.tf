@@ -22,10 +22,9 @@ locals {
   impersonation_apis          = distinct(concat(var.activate_apis, ["serviceusage.googleapis.com", "iamcredentials.googleapis.com"]))
   impersonation_enabled_count = var.sa_enable_impersonation == true ? 1 : 0
   activate_apis               = var.sa_enable_impersonation == true ? local.impersonation_apis : var.activate_apis
-  org_project_creators        = distinct(concat(var.org_project_creators, ["serviceAccount:${google_service_account.org_terraform.email}", "group:${var.group_org_admins}"]))
+  org_project_creators        = ["serviceAccount:${google_service_account.org_terraform.email}"]
   is_organization             = var.parent_folder == "" ? true : false
   parent_id                   = var.parent_folder == "" ? var.org_id : split("/", var.parent_folder)[1]
-#   seed_org_depends_on         = try(google_folder_iam_member.tmp_project_creator.0.etag, "") != "" ? var.org_id : google_organization_iam_member.tmp_project_creator.0.org_id
   seed_org_depends_on         = var.org_id
 }
 
